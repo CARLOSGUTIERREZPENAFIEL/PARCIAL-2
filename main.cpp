@@ -125,6 +125,10 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
                 cin.ignore();
             } while (posicion < 1 || posicion > contador_estaciones[i]-1);
 
+            if (nombre_estacion == nombres_estaciones_unicas[i][posicion - 1] || nombre_estacion == nombres_estaciones_unicas[i][posicion]) {
+                cout << "La estacion ya existe entre las estaciones consecutivas. Por favor, ingrese una estacion nueva." << endl;
+                return;
+            }
 
             int num_estaciones = contador_estaciones[i];
             estaciones** nuevo_arreglo_estaciones = new estaciones*[num_estaciones + 1];
@@ -155,6 +159,7 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
         cout << "La linea especificada no existe. Por favor, ingrese una linea valida." << endl;
     }
 }
+
 
 
 void lineas::imprimirEstacionesDisponibles() {
