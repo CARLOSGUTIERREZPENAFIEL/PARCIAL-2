@@ -18,9 +18,11 @@ private:
     string* arreglo_lineas;
     estaciones*** arreglo_estaciones;
     string** nombres_estaciones_unicas;
+    string* nombres_estaciones_transferencia;
     int* contador_estaciones;
     int contador;
     int capacidad;
+    int capacidad_transfe;
 
 public:
     lineas();
@@ -38,9 +40,11 @@ public:
 lineas::lineas() {
     capacidad = 1;
     contador = 0;
+    capacidad_transfe = 0;
     arreglo_lineas = new string[capacidad];
     arreglo_estaciones = new estaciones**[capacidad];
     nombres_estaciones_unicas = new string*[capacidad];
+    nombres_estaciones_transferencia = new string[capacidad_transfe];
     contador_estaciones = new int[capacidad];
 }
 
@@ -52,6 +56,7 @@ lineas::~lineas() {
         delete[] arreglo_estaciones[i];
     }
     delete[] arreglo_estaciones;
+    delete[] nombres_estaciones_transferencia;
 }
 
 void lineas::agregarLinea() {
@@ -104,7 +109,7 @@ void lineas::agregarLinea() {
 }
 
 void lineas::agregarLinea(string nombre) {
-    bool linea_repetida = false, ban = false;
+    bool linea_repetida = false, ban = false, ban2 = true;
     for (int i = 0; i < contador; i++) {
         if (arreglo_lineas[i] == nombre) {
             linea_repetida = true;
@@ -140,8 +145,7 @@ void lineas::agregarLinea(string nombre) {
     contador_estaciones = nuevo_contador_estaciones;
 
     arreglo_lineas[contador] = nombre;
-
-    string nombre_estacion_transferencia, nombre_estacion_final;
+    string nombre_estacion_transferencia, nombre_estacion_final, nombre_base;
     cout << endl << "********" << endl;
     for (int i = 0; i < contador; i++) {
         cout << "Estaciones de la linea '" << arreglo_lineas[i] << "':" << endl;
@@ -152,14 +156,29 @@ void lineas::agregarLinea(string nombre) {
     cout << "********" << endl;
     cout << endl << "Ingrese el nombre de la estacion de trasnferencia (que se encuentre en una de las lineas anteriores) para la linea '" << nombre << "': ";
     getline(cin, nombre_estacion_transferencia);
+    for(int i=0;i<capacidad_transfe;i++){
+        if(nombre_estacion_transferencia==nombres_estaciones_transferencia[i]){
+            nombre_estacion_transferencia+="-"+nombre;
+            ban=true;
+        }
+    }
     for (int i = 0; i < contador; i++) {
         for (int j = 0; j < contador_estaciones[i]; j++) {
             if(nombre_estacion_transferencia == nombres_estaciones_unicas[i][j]){
                 string nuevo_nombre;
+                nombre_base=nombre_estacion_transferencia;
                 nuevo_nombre=nombre_estacion_transferencia+"-"+arreglo_lineas[i];
                 arreglo_estaciones[i][j]->setNombre(nuevo_nombre);
                 nombres_estaciones_unicas[i][j] = nuevo_nombre;
                 nombre_estacion_transferencia+="-"+nombre;
+                string* nuevo_nombres_estaciones_transferencia = new string[capacidad_transfe + 1];
+                for (int k = 0; k < capacidad_transfe; ++k) {
+                    nuevo_nombres_estaciones_transferencia[k] = nombres_estaciones_transferencia[k];
+                }
+                nuevo_nombres_estaciones_transferencia[capacidad_transfe] = nombre_base;
+                delete[] nombres_estaciones_transferencia;
+                nombres_estaciones_transferencia = nuevo_nombres_estaciones_transferencia;
+                capacidad_transfe++;
                 ban=true;
             }
         }
@@ -169,18 +188,27 @@ void lineas::agregarLinea(string nombre) {
         cout << "Linea no creada." << endl;
         return;
     }
-
-    cout << "Ingrese el nombre de la estacion final para la linea " << nombre << ": ";
-    getline(cin, nombre_estacion_final);
-    for (int i = 0; i < contador; i++) {
-        for (int j = 0; j < contador_estaciones[i]; j++) {
-            if(nombre_estacion_final == nombres_estaciones_unicas[i][j]){
-                cout << "La estacion '" << nombre_estacion_final << "' existe en la linea '" << arreglo_lineas[i] << "'. Por favor, intente de nuevo." << endl;
-                cout << "Linea no creada." << endl;
-                return;
+    do{
+        ban2=true;
+        cout << "Ingrese el nombre de la estacion final para la linea " << nombre << ": ";
+        getline(cin, nombre_estacion_final);
+        for(int i=0;i<capacidad_transfe;i++){
+            nombre_base = nombres_estaciones_transferencia[i];
+            if(nombre_base==nombre_estacion_final){
+                cout << "La estacion '" << nombre_estacion_final << "' es una estacion de transferencia, por favor ingrese otro nombre o generaria un bucle." << endl;
+                ban2=false;
             }
         }
-    }
+
+        for (int i = 0; i < contador; i++) {
+            for (int j = 0; j < contador_estaciones[i]; j++) {
+                if(nombre_estacion_final == nombres_estaciones_unicas[i][j]){
+                    cout << "La estacion '" << nombre_estacion_final << "' existe en la linea '" << arreglo_lineas[i] << "'. Por favor, intente de nuevo." << endl;
+                    ban2=false;
+                }
+            }
+        }
+    }while(ban2==false);
     arreglo_estaciones[contador] = new estaciones*[2];
     nombres_estaciones_unicas[contador] = new string[2];
     arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_transferencia, nombre);
