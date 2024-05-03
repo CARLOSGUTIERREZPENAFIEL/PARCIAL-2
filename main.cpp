@@ -190,7 +190,7 @@ void lineas::agregarLinea(string nombre) {
     }
     do{
         ban2=true;
-        cout << "Ingrese el nombre de la estacion final para la linea " << nombre << ": ";
+        cout << "Ingrese el nombre de la estacion final para la linea '" << nombre << "': ";
         getline(cin, nombre_estacion_final);
         for(int i=0;i<capacidad_transfe;i++){
             nombre_base = nombres_estaciones_transferencia[i];
@@ -315,8 +315,14 @@ int main() {
     red_metro.agregarLinea();
     while (ban) {
         cout << endl << "*Ingrese la opcion deseada.*" << endl
-             << "1. Agregar una linea a la red metro." << endl
-             << "2. Agregar una estacion a una linea existente." << endl
+             << "1. Agregar una estacion a una linea." << endl
+             << "2. Eliminar una estacion de una linea." << endl
+             << "3. Cantidad de lineas de la red." << endl
+             << "4. Cantidad de estaciones de 'x' linea." << endl
+             << "5. Consultar si 'x' estacion, pertenece a 'y' linea." << endl
+             << "6. Agregar una linea a la red metro" << endl
+             << "7. Eliminar una linea de la red metro" << endl
+             << "8. Cantidad de estaciones de la red metro." << endl
              << "n. Salir." << endl << endl
              << "Opcion: ";
         cin >> opcion;
