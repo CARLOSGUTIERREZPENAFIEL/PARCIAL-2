@@ -7,14 +7,21 @@ private:
     string nombre;
     string nombre_linea;
     bool es_transferencia;
+    string tiempo_antes;
+    string tiempo_despues;
 public:
     estaciones(string _nombre, string _nombre_linea, bool _es_transferencia = false)
-        : nombre(_nombre), nombre_linea(_nombre_linea), es_transferencia(_es_transferencia) {}
+        : nombre(_nombre), nombre_linea(_nombre_linea), es_transferencia(_es_transferencia), tiempo_antes("0"), tiempo_despues("0") {}
     string getNombre() { return nombre; }
     string getNombreLinea() { return nombre_linea; }
     void setNombre(string _nombre) { nombre = _nombre; }
     void setEsTransferencia(bool _es_transferencia) { es_transferencia = _es_transferencia; }
     bool getEsTransferencia() { return es_transferencia; }
+    string getTiempoAntes() { return tiempo_antes; }
+    string getTiempoDespues() { return tiempo_despues; }
+    void setTiempoAntes(string _tiempo_antes) { tiempo_antes = _tiempo_antes; }
+    void setTiempoDespues(string _tiempo_despues) { tiempo_despues = _tiempo_despues; }
+
 };
 
 class lineas {
@@ -36,16 +43,18 @@ public:
     void eliminarLinea(string nombre);
     void agregarEstacion(string nombre_estacion, string nombre_linea);
     void eliminarEstacion(string nombre_estacion, string nombre_linea);
-    void consultarEstacion(string nombre_linea, string nombre_estacion);
+    bool consultarEstacion(string nombre_linea, string nombre_estacion);
     void imprimirEstacionesDisponibles();
     string getNombreLinea(int indice);
     string getNombreEstacion(int indice_linea, int indice_estacion);
+    string getTiempoDespues(string nombre_estacion);
+    string getTiempoAntes(string nombre_estacion);
+    void tiempoEstaciones(string nombre_linea, string nombre_estacion_i, string nombre_estacion_f);
     int getNumeroDeLineas();
     int getNumeroDeEstaciones(int indice_linea);
     int getNumeroTotalDeEstaciones();
     int getNumeroTotalDeLineas();
     int getNumeroDeEstaciones(string nombre_linea);
-
 
 };
 
@@ -104,7 +113,29 @@ int lineas::getNumeroDeEstaciones(string nombre_linea) {
     return contador_estaciones[indice_linea];
 }
 
-void lineas::consultarEstacion(string nombre_linea, string nombre_estacion) {
+string lineas::getTiempoDespues(string nombre_estacion) {
+    for (int i = 0; i < contador; i++) {
+            for (int j = 0; j < contador_estaciones[i]; j++) {
+                if (arreglo_estaciones[i][j]->getNombre() == nombre_estacion) {
+                    return arreglo_estaciones[i][j]->getTiempoDespues();
+                }
+            }
+    }
+    return "hola";
+}
+
+string lineas::getTiempoAntes(string nombre_estacion) {
+    for (int i = 0; i < contador; i++) {
+        for (int j = 0; j < contador_estaciones[i]; j++) {
+            if (arreglo_estaciones[i][j]->getNombre() == nombre_estacion) {
+                return arreglo_estaciones[i][j]->getTiempoAntes();
+            }
+        }
+    }
+    return "hola";
+}
+
+bool lineas::consultarEstacion(string nombre_linea, string nombre_estacion) {
     string nombre_estacion_transf;
     bool ban = false;
     nombre_estacion_transf = nombre_estacion+"-"+nombre_linea;
@@ -117,8 +148,7 @@ void lineas::consultarEstacion(string nombre_linea, string nombre_estacion) {
         if (arreglo_lineas[i] == nombre_linea) {
             for (int j = 0; j < contador_estaciones[i]; j++) {
                 if (arreglo_estaciones[i][j]->getNombre() == nombre_estacion || arreglo_estaciones[i][j]->getNombre() == nombre_estacion_transf) {
-                    cout << endl << "  *La estacion '" << nombre_estacion << "' si pertenece a la linea '" << nombre_linea << "'.*" << endl;
-                    return;
+                    return 1;
                 }
             }
         }
@@ -129,21 +159,22 @@ void lineas::consultarEstacion(string nombre_linea, string nombre_estacion) {
             if(nombre_estacion == nombres_estaciones_unicas[i][j] || nombre_estacion_transf == nombres_estaciones_unicas[i][j]){
                 if(ban == false){
                     cout << endl << "  *La linea '" << nombre_linea << "' no existe." << " Pero la estacion '" << nombre_estacion << "' existe en la linea '" << arreglo_lineas[i] << "'.*" << endl;
-                    return;
+                    return 0;
                 }
                 cout << endl << "  *La estacion '" << nombre_estacion << "' no existe en la linea '" << nombre_linea << "'. Pero existe en la linea '" << arreglo_lineas[i] << "'.*" << endl;
-                return;
+                return 0;
             }
         }
     }
     cout << endl << "  *La estacion '" << nombre_estacion << "' no existe en ninguna linea.*" << endl;
-    return;
+    return 0;
 }
 
 
 
 void lineas::agregarLinea() {
-    string nombre;
+    string nombre, tiempo_est;
+    bool contieneSoloNumeros;
     cout << "Ingrese el nombre de la primera linea de metro: ";
     getline(cin, nombre);
     capacidad++;
@@ -180,10 +211,28 @@ void lineas::agregarLinea() {
         cout << endl << "No puede ingresar las estaciones con el mismo nombre." << endl << "Por favor ingrese otra estacion final para la linea '" << nombre << "': ";
         getline(cin, nombre_estacion_final);
     }
+    do {
+        cout << "Ingrese el tiempo en segundos que tarda en llegar de la estacion '" << nombre_estacion_inicial << "' a la estacion '" << nombre_estacion_final << "': ";
+        getline(cin, tiempo_est);
+
+        contieneSoloNumeros = true;
+        for (char c : tiempo_est) {
+            if (!(c >= '0' && c <= '9')) {
+                contieneSoloNumeros = false;
+                break;
+            }
+        }
+
+        if (!contieneSoloNumeros) {
+            cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+        }
+    } while (!contieneSoloNumeros);
     arreglo_estaciones[contador] = new estaciones*[2];
     nombres_estaciones_unicas[contador] = new string[2];
     arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_inicial, nombre, false);
+    arreglo_estaciones[contador][0]->setTiempoDespues(tiempo_est);
     arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre, false);
+    arreglo_estaciones[contador][1]->setTiempoAntes(tiempo_est);
     nombres_estaciones_unicas[contador][0] = nombre_estacion_inicial;
     nombres_estaciones_unicas[contador][1] = nombre_estacion_final;
     contador_estaciones[contador] = 2;
@@ -191,8 +240,156 @@ void lineas::agregarLinea() {
     cout << "  *Primera linea agregada con exito.*" << endl;
 }
 
+void lineas::tiempoEstaciones(string nombre_linea, string nombre_estacion_i, string nombre_estacion_f) {
+    bool est_1 = consultarEstacion(nombre_linea, nombre_estacion_i);
+    bool est_2 = consultarEstacion(nombre_linea, nombre_estacion_f);
+    bool contieneSoloNumeros = false;
+    int hora = 0, minutos = 0, segundos = 0, segundos_viaje = 0, segundos_viaje_totales = 0, minutos_viaje_totales = 0, hora_viaje_totales = 0;
+    int indice_estacion_i, indice_estacion_f;
+    string input, tiempo, tiempo_final, tiempo_inicial;
+    if (est_1 == 0 || est_2 == 0) {
+        cout << "  *Deben ser estaciones de la misma linea, intente de nuevo.*";
+        return;
+    }
+    cout << "Ingrese la hora actual, en el siguiente orden: hora, minutos, segundos. (ingreselos de manera separada de a dos digitos, por ejemplo '01' o '12')." << endl;
+    while (!contieneSoloNumeros) {
+        hora = 0; // Reinicia la variable hora
+        cout << "Por favor, ingresa la HORA: ";
+        getline(cin, input);
+
+        // Verificar si el string tiene exactamente dos dígitos
+        if (input.length() == 2) {
+            contieneSoloNumeros = true;
+            for (char c : input) {
+                if (!(c >= '0' && c <= '9')) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+                hora *= 10;
+                hora += c - '0';
+                if (hora > 23 || hora < 0) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+            }
+        } else {
+            cout << "La hora debe contener dos digitos, y no ser mayor de 24 o menor de 00." << endl;
+        }
+    }
+    contieneSoloNumeros = false;
+    tiempo_inicial += input + ":";
+    while (!contieneSoloNumeros) {
+        minutos = 0; // Reinicia la variable minutos
+        cout << "Por favor, ingresa los MINUTOS: ";
+        cin >> input;
+
+        // Verificar si el string tiene exactamente dos dígitos
+        if (input.length() == 2) {
+            contieneSoloNumeros = true;
+            for (char c : input) {
+                if (!(c >= '0' && c <= '9')) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+                minutos *= 10;
+                minutos += c - '0';
+                if (minutos > 59 || minutos < 0) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+            }
+        } else {
+            cout << "Los minutos debe contener dos digitos, y no ser mayor de 59 o menor de 00." << endl;
+        }
+    }
+    contieneSoloNumeros = false;
+    tiempo_inicial += input + ":";
+    while (!contieneSoloNumeros) {
+        segundos = 0; // Reinicia la variable segundos
+        cout << "Por favor, ingresa los SEGUNDOS: ";
+        cin >> input;
+
+        // Verificar si el string tiene exactamente dos dígitos
+        if (input.length() == 2) {
+            contieneSoloNumeros = true;
+            for (char c : input) {
+                if (!(c >= '0' && c <= '9')) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+                segundos *= 10;
+                segundos += c - '0';
+                if (segundos > 59 || segundos < 0) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+            }
+        } else {
+            cout << "Los segundos deben contener dos digitos, y no ser mayor de 59 o menor de 00." << endl;
+        }
+    }
+    tiempo_inicial += input;
+    for (int i = 0; i < contador; i++) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            for (int j = 0; j < contador_estaciones[i]; j++) {
+                if (nombre_estacion_i == nombres_estaciones_unicas[i][j]) {
+                    indice_estacion_i = j;
+                }
+                else if (nombre_estacion_f == nombres_estaciones_unicas[i][j]) {
+                    indice_estacion_f = j;
+                }
+            }
+        }
+    }
+    if(indice_estacion_f < indice_estacion_i) {
+        int temp=indice_estacion_i;
+        indice_estacion_i=indice_estacion_f;
+        indice_estacion_f=temp;
+    }
+    for (int i = 0; i < contador; i++) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            for (int j = indice_estacion_i; j <= indice_estacion_f; j++) {
+                tiempo = arreglo_estaciones[i][j]->getTiempoDespues();
+                segundos_viaje=0;
+                for (char c : tiempo) {
+                    segundos_viaje*=10;
+                    segundos_viaje+=c-'0';
+
+                }
+                segundos_viaje_totales+=segundos_viaje;
+                if (segundos_viaje_totales > 59) {
+                    segundos_viaje_totales-=60;
+                    minutos_viaje_totales+=1;
+                }
+                if (minutos_viaje_totales > 59) {
+                    minutos_viaje_totales-=60;
+                    hora_viaje_totales+=1;
+                }
+            }
+        }
+    }
+
+    segundos_viaje_totales+=segundos;
+    minutos_viaje_totales+=minutos;
+    hora_viaje_totales+=hora;
+    while(segundos_viaje_totales>59) {
+        segundos_viaje_totales-=60;
+        minutos_viaje_totales+=1;
+    }
+    while(minutos_viaje_totales>59) {
+        minutos_viaje_totales-=60;
+        hora_viaje_totales+=1;
+    }
+    while(hora_viaje_totales>24) {
+        hora_viaje_totales-=24;
+    }
+    tiempo_final = to_string(hora_viaje_totales)+":"+to_string(minutos_viaje_totales)+":"+to_string(segundos_viaje_totales);
+    cout << endl << "*Si inicial el viaje desde '" << nombre_estacion_i  << "' a las '" << tiempo_inicial << "' estaria llegando a '" << nombre_estacion_f << "' a las '" << tiempo_final << "'.*" << endl;
+}
+
 void lineas::agregarLinea(string nombre) {
-    bool linea_repetida = false, ban = false, ban2 = true;
+    bool linea_repetida = false, ban = false, ban2 = true, contieneSoloNumeros;
+    string tiempo_est;
     for (int i = 0; i < contador; i++) {
         if (arreglo_lineas[i] == nombre) {
             linea_repetida = true;
@@ -267,6 +464,7 @@ void lineas::agregarLinea(string nombre) {
     } while(ban==false);
     do{
         ban2=true;
+
         cout << "Ingrese el nombre de la estacion final para la linea '" << nombre << "': ";
         getline(cin, nombre_estacion_final);
         for(int i=0;i<capacidad_transfe;i++){
@@ -286,10 +484,28 @@ void lineas::agregarLinea(string nombre) {
             }
         }
     }while(ban2==false);
+    do {
+        cout << "Ingrese el tiempo en segundos que tarda en llegar de la estacion '" << nombre_estacion_transferencia << "' a la estacion '" << nombre_estacion_final << "': ";
+        getline(cin, tiempo_est);
+
+        contieneSoloNumeros = true;
+        for (char c : tiempo_est) {
+            if (!(c >= '0' && c <= '9')) {
+                contieneSoloNumeros = false;
+                break;
+            }
+        }
+
+        if (!contieneSoloNumeros) {
+            cout << endl << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl << endl;
+        }
+    } while (!contieneSoloNumeros);
     arreglo_estaciones[contador] = new estaciones*[2];
     nombres_estaciones_unicas[contador] = new string[2];
     arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_transferencia, nombre, true);
+    arreglo_estaciones[contador][0]->setTiempoDespues(tiempo_est);
     arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre, false);
+    arreglo_estaciones[contador][1]->setTiempoAntes(tiempo_est);
     nombres_estaciones_unicas[contador][0] = nombre_estacion_transferencia;
     nombres_estaciones_unicas[contador][1] = nombre_estacion_final;
     contador_estaciones[contador] = 2;
@@ -347,7 +563,8 @@ void lineas::eliminarLinea(string nombre_linea) {
 
 
 void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
-    bool linea_encontrada = false;
+    string tiempo_est="a";
+    bool linea_encontrada = false, contieneSoloNumeros = false;
     for (int i = 0; i < contador; i++) {
         for (int j = 0; j < contador_estaciones[i]; j++) {
             if(nombre_estacion == nombres_estaciones_unicas[i][j]){
@@ -374,6 +591,7 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
                     cin.ignore(10000, '\n');
                 }
             } while (posicion < 1 || posicion > contador_estaciones[i]+1);
+            cin.ignore();
             if (posicion == contador_estaciones[i]+1){
                 posicion=0;
             }
@@ -398,15 +616,89 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
             arreglo_estaciones[i] = nuevo_arreglo_estaciones;
             nombres_estaciones_unicas[i] = nuevo_nombres_estaciones_unicas;
             contador_estaciones[i]++;
+            cout << endl;
             if (posicion == 0) {
+                do {
+                    cout << "Ingrese el tiempo en segundos que tardara la estacion '" << nombres_estaciones_unicas[i][posicion] << "' en llegar hasta la estacion '" << nombres_estaciones_unicas[i][posicion+1] << "': ";
+                    getline(cin, tiempo_est);
+
+                    contieneSoloNumeros = true;
+                    for (char c : tiempo_est) {
+                        if (!(c >= '0' && c <= '9')) {
+                            contieneSoloNumeros = false;
+                            break;
+                        }
+                    }
+
+                    if (!contieneSoloNumeros) {
+                        cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+                    }
+                } while (!contieneSoloNumeros);
+                arreglo_estaciones[i][posicion]->setTiempoDespues(tiempo_est);
+                arreglo_estaciones[i][posicion+1]->setTiempoAntes(tiempo_est);
                 cout << "  *Estacion agregada con exito en el extremo inicial.*" << endl;
                 break;
             }
             else if (posicion == contador_estaciones[i]-1) {
+                do {
+                    cout << "Ingrese el tiempo en segundos que tardara la estacion '" << nombres_estaciones_unicas[i][posicion-1] << "' en llegar hasta la estacion '" << nombres_estaciones_unicas[i][posicion] << "': ";
+                    getline(cin, tiempo_est);
+
+                    contieneSoloNumeros = true;
+                    for (char c : tiempo_est) {
+                        if (!(c >= '0' && c <= '9')) {
+                            contieneSoloNumeros = false;
+                            break;
+                        }
+                    }
+
+                    if (!contieneSoloNumeros) {
+                        cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+                    }
+                } while (!contieneSoloNumeros);
+                arreglo_estaciones[i][posicion-1]->setTiempoDespues(tiempo_est);
+                arreglo_estaciones[i][posicion]->setTiempoAntes(tiempo_est);
+
                 cout << "  *Estacion agregada con exito en el extremo final.*" << endl;
                 break;
             }
             else {
+
+                do {
+                    cout << "Ingrese el tiempo en segundos que tardara la estacion '" << nombres_estaciones_unicas[i][posicion - 1] << "' en llegar hasta la estacion '" << nombres_estaciones_unicas[i][posicion] << "': ";
+                    getline(cin, tiempo_est);
+                    contieneSoloNumeros = true;
+                    for (char c : tiempo_est) {
+                        if (!(c >= '0' && c <= '9')) {
+                            contieneSoloNumeros = false;
+                            break;
+                        }
+                    }
+
+                    if (!contieneSoloNumeros) {
+                        cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+                    }
+                } while (!contieneSoloNumeros);
+                arreglo_estaciones[i][posicion-1]->setTiempoDespues(tiempo_est);
+                arreglo_estaciones[i][posicion]->setTiempoAntes(tiempo_est);
+
+                do {
+                    cout << "Ingrese el tiempo en segundos que tardara la estacion '" << nombres_estaciones_unicas[i][posicion] << "' en llegar hasta la estacion '" << nombres_estaciones_unicas[i][posicion+1] << "': ";
+                    getline(cin, tiempo_est);
+                    contieneSoloNumeros = true;
+                    for (char c : tiempo_est) {
+                        if (!(c >= '0' && c <= '9')) {
+                            contieneSoloNumeros = false;
+                            break;
+                        }
+                    }
+
+                    if (!contieneSoloNumeros) {
+                        cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+                    }
+                } while (!contieneSoloNumeros);
+                arreglo_estaciones[i][posicion]->setTiempoDespues(tiempo_est);
+                arreglo_estaciones[i][posicion+1]->setTiempoAntes(tiempo_est);
                 cout << "  *Estacion agregada con exito entre '" << nombres_estaciones_unicas[i][posicion - 1] << "' y '" << nombres_estaciones_unicas[i][posicion+1] << "'.*" << endl;
                 break;
             }
@@ -420,8 +712,8 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
 
 
 void lineas::eliminarEstacion(string nombre_estacion, string nombre_linea) {
-    bool banderilla = false, ban=false;
-    string nom_transf;
+    bool banderilla = false, ban=false, contieneSoloNumeros = false;
+    string nom_transf, tiempo_est;
     int indice_linea = 0;
     int indice_estacion = 0;
     nom_transf=nombre_estacion+"-"+nombre_linea;
@@ -481,8 +773,35 @@ void lineas::eliminarEstacion(string nombre_estacion, string nombre_linea) {
         nombres_estaciones_unicas[indice_linea][j] = nombres_estaciones_unicas[indice_linea][j + 1];
     }
     --contador_estaciones[indice_linea];
+    int est_linea = contador_estaciones[indice_linea];
     cout << "  *La estacion '" << nombre_estacion << "' ha sido eliminada exitosamente de la linea '" << nombre_linea << "'.*" << endl;
+    if (indice_estacion == 0) {
+        cout << "aca: " << arreglo_estaciones[indice_linea][indice_estacion+1]->getNombre();
+        arreglo_estaciones[indice_linea][indice_estacion]->setTiempoAntes("0");
 
+    } else if (indice_estacion == est_linea) {
+        arreglo_estaciones[indice_linea][est_linea-1]->setTiempoDespues("0");
+
+    } else {
+        do {
+            cout << "Ingrese el tiempo en segundos que tardara de la estacion '" << nombres_estaciones_unicas[indice_linea][indice_estacion-1] << "' en llegar hasta la estacion '" << nombres_estaciones_unicas[indice_linea][indice_estacion] << "': ";
+            getline(cin, tiempo_est);
+
+            contieneSoloNumeros = true;
+            for (char c : tiempo_est) {
+                if (!(c >= '0' && c <= '9')) {
+                    contieneSoloNumeros = false;
+                    break;
+                }
+            }
+
+            if (!contieneSoloNumeros) {
+                cout << "***El numero ingresado contiene caracteres. Intente de nuevo.***" << endl;
+            }
+        } while (!contieneSoloNumeros);
+        arreglo_estaciones[indice_linea][indice_estacion-1]->setTiempoDespues(tiempo_est);
+        arreglo_estaciones[indice_linea][indice_estacion]->setTiempoAntes(tiempo_est);
+    }
 
 
 }
@@ -520,7 +839,7 @@ int lineas::getNumeroDeEstaciones(int indice_linea) {
 int main() {
     char opcion;
     string nombre_linea;
-    string nombre_estacion;
+    string nombre_estacion, nombre_estacion_f;
     bool ban = true;
     lineas red_metro;
     cout << "**Bienvenido a la creacion de una RED METRO.**" << endl << endl;
@@ -536,7 +855,8 @@ int main() {
              << "7. Eliminar una linea de la red metro." << endl
              << "8. Cantidad de estaciones de la red metro." << endl
              << "9. Estaciones disponibles." << endl
-             << "n. Salir." << endl << endl
+             << "M. Calculo del tiempo de llegada." << endl
+             << "N. Salir." << endl << endl
              << "Opcion: ";
         cin >> opcion;
         cin.ignore();
@@ -577,7 +897,10 @@ int main() {
             getline(cin, nombre_linea);
             cout << "Ingrese la estacion que desea consultar: ";
             getline(cin, nombre_estacion);
-            red_metro.consultarEstacion(nombre_linea, nombre_estacion);
+            bool conEst=red_metro.consultarEstacion(nombre_linea, nombre_estacion);
+            if(conEst==1){
+                cout << endl << "  *La estacion '" << nombre_estacion << "' si pertenece a la linea '" << nombre_linea << "'.*" << endl;
+            }
 
         } else if (opcion == '6') {
             if(red_metro.getNumeroDeLineas() == 0){
@@ -602,7 +925,17 @@ int main() {
         } else if (opcion == '9') {
             red_metro.imprimirEstacionesDisponibles();
 
-        } else if (opcion == 'n') {
+        } else if (opcion == 'm' || opcion == 'M') {
+            red_metro.imprimirEstacionesDisponibles();
+            cout << "Ingrese la linea de las estaciones: ";
+            getline(cin, nombre_linea);
+            cout << "Ingrese la estacion inicial: ";
+            getline(cin, nombre_estacion);
+            cout << "Ingrese la estacion final: ";
+            getline(cin, nombre_estacion_f);
+            red_metro.tiempoEstaciones(nombre_linea, nombre_estacion, nombre_estacion_f);
+
+        } else if (opcion == 'n' || opcion == 'N') {
             ban = false;
         }
     }
