@@ -1,16 +1,20 @@
 #include <iostream>
 
 using namespace std;
-
+// recordar cambiar el uso de memoria de +1 en cada ciclo, a *2 al llenarse
 class estaciones {
 private:
     string nombre;
     string nombre_linea;
+    bool es_transferencia;
 public:
-    estaciones(string _nombre, string _nombre_linea) : nombre(_nombre), nombre_linea(_nombre_linea) {}
+    estaciones(string _nombre, string _nombre_linea, bool _es_transferencia = false)
+        : nombre(_nombre), nombre_linea(_nombre_linea), es_transferencia(_es_transferencia) {}
     string getNombre() { return nombre; }
     string getNombreLinea() { return nombre_linea; }
     void setNombre(string _nombre) { nombre = _nombre; }
+    void setEsTransferencia(bool _es_transferencia) { es_transferencia = _es_transferencia; }
+    bool getEsTransferencia() { return es_transferencia; }
 };
 
 class lineas {
@@ -29,7 +33,9 @@ public:
     ~lineas();
     void agregarLinea(string nombre);
     void agregarLinea();
+    void eliminarLinea(string nombre);
     void agregarEstacion(string nombre_estacion, string nombre_linea);
+    void eliminarEstacion(string nombre_estacion, string nombre_linea);
     void imprimirEstacionesDisponibles();
     string getNombreLinea(int indice);
     string getNombreEstacion(int indice_linea, int indice_estacion);
@@ -99,8 +105,8 @@ void lineas::agregarLinea() {
     }
     arreglo_estaciones[contador] = new estaciones*[2];
     nombres_estaciones_unicas[contador] = new string[2];
-    arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_inicial, nombre);
-    arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre);
+    arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_inicial, nombre, false);
+    arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre, false);
     nombres_estaciones_unicas[contador][0] = nombre_estacion_inicial;
     nombres_estaciones_unicas[contador][1] = nombre_estacion_final;
     contador_estaciones[contador] = 2;
@@ -179,6 +185,7 @@ void lineas::agregarLinea(string nombre) {
                 delete[] nombres_estaciones_transferencia;
                 nombres_estaciones_transferencia = nuevo_nombres_estaciones_transferencia;
                 capacidad_transfe++;
+                arreglo_estaciones[i][j]->setEsTransferencia(true);
                 ban=true;
             }
         }
@@ -211,14 +218,64 @@ void lineas::agregarLinea(string nombre) {
     }while(ban2==false);
     arreglo_estaciones[contador] = new estaciones*[2];
     nombres_estaciones_unicas[contador] = new string[2];
-    arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_transferencia, nombre);
-    arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre);
+    arreglo_estaciones[contador][0] = new estaciones(nombre_estacion_transferencia, nombre, true);
+    arreglo_estaciones[contador][1] = new estaciones(nombre_estacion_final, nombre, false);
     nombres_estaciones_unicas[contador][0] = nombre_estacion_transferencia;
     nombres_estaciones_unicas[contador][1] = nombre_estacion_final;
     contador_estaciones[contador] = 2;
     contador++;
     cout << "Linea agregada con exito." << endl;
 }
+
+
+void lineas::eliminarLinea(string nombre_linea) {
+    bool banderilla = false;
+    string nom_transf;
+    for (int i = 0; i < contador; i++) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            banderilla = true;
+            for (int j = 0; j < contador_estaciones[i]; j++) {
+                if (arreglo_estaciones[i][j]->getEsTransferencia()) {
+                    cout << endl << "*Esta linea cuenta con una estacion de transferencia, no se puede eliminar.*" << endl;
+                    return;
+                }
+            }
+        }
+    }
+
+
+    if (banderilla == false){
+        cout << endl << "*No existe la linea ingresada, por favor intente de nuevo.*" << endl;
+        return;
+    }
+
+    int indice_eliminar = -1;
+    for (int i = 0; i < contador; ++i) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            indice_eliminar = i;
+            break;
+        }
+    }
+
+    for (int i = 0; i < contador_estaciones[indice_eliminar]; ++i) {
+        delete arreglo_estaciones[indice_eliminar][i];
+    }
+    delete[] arreglo_estaciones[indice_eliminar];
+    delete[] nombres_estaciones_unicas[indice_eliminar];
+
+    for (int i = indice_eliminar; i < contador - 1; ++i) {
+        arreglo_lineas[i] = arreglo_lineas[i + 1];
+        arreglo_estaciones[i] = arreglo_estaciones[i + 1];
+        nombres_estaciones_unicas[i] = nombres_estaciones_unicas[i + 1];
+        contador_estaciones[i] = contador_estaciones[i + 1];
+    }
+
+    --contador;
+
+    cout << "La linea '" << nombre_linea << "' ha sido eliminada exitosamente." << endl;
+
+}
+
 
 
 void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
@@ -279,6 +336,73 @@ void lineas::agregarEstacion(string nombre_estacion, string nombre_linea) {
 
 
 
+void lineas::eliminarEstacion(string nombre_estacion, string nombre_linea) {
+    bool banderilla = false;
+    string nom_transf;
+    int indice_linea = 0;
+    int indice_estacion = 0;
+    nom_transf=nombre_estacion+"-"+nombre_linea;
+    for (int i = 0; i < contador; i++) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            for (int j = 0; j < contador_estaciones[i]; j++) {
+                if (nombre_estacion == nombres_estaciones_unicas[i][j]) {
+                    banderilla = true;
+                    indice_estacion = j;
+                    bool transf = arreglo_estaciones[i][j]->getEsTransferencia();
+                    if (transf) {
+                        cout << "Esta estacion es de transferencia, no se puede eliminar." << endl;
+                        return;
+                    }
+                } else if (nom_transf == nombres_estaciones_unicas[i][j]) {
+                    cout << "Esta estacion es de transferencia, no se puede eliminar." << endl;
+                    return;
+                }
+            }
+        }
+    }
+
+
+    if (banderilla == false) {
+        cout << "La estacion '" << nombre_estacion << "' no existe en la linea '" << nombre_linea << "'." << endl;
+        char respuesta;
+        do{
+            cout << "Desea agregar esta estacion a la linea? (Y/N): ";
+            cin >> respuesta;
+            cout << endl;
+            cin.ignore(); // Limpiar el buffer de entrada
+            if (respuesta == 'Y' || respuesta == 'y') {
+                agregarEstacion(nombre_estacion, nombre_linea);
+                return;
+            }
+            else if (respuesta == 'N' || respuesta == 'n'){
+                return;
+            }
+        } while(banderilla == false);
+    }
+    // Encontrar el índice de la línea a la que pertenece la estación
+    for (int i = 0; i < contador; ++i) {
+        if (arreglo_lineas[i] == nombre_linea) {
+            indice_linea = i;
+            break;
+        }
+    }
+    // Liberar la memoria asignada para la estación
+    delete arreglo_estaciones[indice_linea][indice_estacion];
+    // Eliminar la estación del arreglo de nombres de estaciones únicas
+    for (int j = indice_estacion; j < contador_estaciones[indice_linea] - 1; ++j) {
+        nombres_estaciones_unicas[indice_linea][j] = nombres_estaciones_unicas[indice_linea][j + 1];
+    }
+    // Actualizar el contador de estaciones de la línea
+    --contador_estaciones[indice_linea];
+    cout << "La estacion '" << nombre_estacion << "' ha sido eliminada exitosamente de la linea '" << nombre_linea << "'." << endl;
+
+    //comprobar si es estacion de transferenciacon el true y el false de los atributos de estaciones.
+
+
+}
+
+
+
 void lineas::imprimirEstacionesDisponibles() {
     cout << endl << "Estaciones disponibles:" << endl;
     for (int i = 0; i < contador; i++) {
@@ -329,11 +453,6 @@ int main() {
         cin.ignore();
 
         if (opcion == '1') {
-            cout << "Ingrese el nombre de la linea: ";
-            getline(cin, nombre_linea);
-            red_metro.agregarLinea(nombre_linea);
-
-        } else if (opcion == '2') {
             red_metro.imprimirEstacionesDisponibles();
             cout << "Ingrese el nombre de la linea a la que pertenece la estacion: ";
             getline(cin, nombre_linea);
@@ -341,17 +460,29 @@ int main() {
             getline(cin, nombre_estacion);
             red_metro.agregarEstacion(nombre_estacion, nombre_linea);
 
+        } else if(opcion == '2') {
+            red_metro.imprimirEstacionesDisponibles();
+            cout << "Ingrese el nombre de la linea a la que pertenece la estacion: ";
+            getline(cin, nombre_linea);
+            cout << "Ingrese el nombre de la estacion: ";
+            getline(cin, nombre_estacion);
+            red_metro.eliminarEstacion(nombre_estacion, nombre_linea);
+
+        } else if (opcion == '6') {
+            cout << "Ingrese el nombre de la linea: ";
+            getline(cin, nombre_linea);
+            red_metro.agregarLinea(nombre_linea);
+
+        } else if (opcion == '7') {
+            cout << "Ingrese el nombre de la linea: ";
+            getline(cin, nombre_linea);
+            red_metro.eliminarLinea(nombre_linea);
+
         } else if (opcion == 'n') {
             ban = false;
         }
     }
-    cout << "Nombres de las lineas almacenadas:" << endl;
-    for (int i = 0; i < red_metro.getNumeroDeLineas(); i++) {
-        cout << "Estaciones de la linea '" << red_metro.getNombreLinea(i) << "':" << endl;
-        for (int j = 0; j < red_metro.getNumeroDeEstaciones(i); j++) {
-            cout << "  - " << red_metro.getNombreEstacion(i, j) << endl;
-        }
-    }
+    red_metro.imprimirEstacionesDisponibles();
 
     return 0;
 }
