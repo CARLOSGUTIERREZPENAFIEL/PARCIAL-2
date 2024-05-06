@@ -115,11 +115,11 @@ int lineas::getNumeroDeEstaciones(string nombre_linea) {
 
 string lineas::getTiempoDespues(string nombre_estacion) {
     for (int i = 0; i < contador; i++) {
-            for (int j = 0; j < contador_estaciones[i]; j++) {
-                if (arreglo_estaciones[i][j]->getNombre() == nombre_estacion) {
-                    return arreglo_estaciones[i][j]->getTiempoDespues();
-                }
+        for (int j = 0; j < contador_estaciones[i]; j++) {
+            if (arreglo_estaciones[i][j]->getNombre() == nombre_estacion) {
+                return arreglo_estaciones[i][j]->getTiempoDespues();
             }
+        }
     }
     return "hola";
 }
@@ -942,3 +942,4 @@ int main() {
 
     return 0;
 }
+
