@@ -348,7 +348,7 @@ void lineas::tiempoEstaciones(string nombre_linea, string nombre_estacion_i, str
     }
     for (int i = 0; i < contador; i++) {
         if (arreglo_lineas[i] == nombre_linea) {
-            for (int j = indice_estacion_i; j <= indice_estacion_f; j++) {
+            for (int j = indice_estacion_i; j < indice_estacion_f; j++) {
                 tiempo = arreglo_estaciones[i][j]->getTiempoDespues();
                 segundos_viaje=0;
                 for (char c : tiempo) {
@@ -776,10 +776,10 @@ void lineas::eliminarEstacion(string nombre_estacion, string nombre_linea) {
     int est_linea = contador_estaciones[indice_linea];
     cout << "  *La estacion '" << nombre_estacion << "' ha sido eliminada exitosamente de la linea '" << nombre_linea << "'.*" << endl;
     if (indice_estacion == 0) {
-        cout << "aca: " << arreglo_estaciones[indice_linea][indice_estacion+1]->getNombre();
-        arreglo_estaciones[indice_linea][indice_estacion]->setTiempoAntes("0");
+        arreglo_estaciones[indice_linea][indice_estacion+1]->setTiempoAntes("0");
 
     } else if (indice_estacion == est_linea) {
+        cout << "aca: " << arreglo_estaciones[indice_linea][indice_estacion-1]->getNombre();
         arreglo_estaciones[indice_linea][est_linea-1]->setTiempoDespues("0");
 
     } else {
@@ -936,9 +936,14 @@ int main() {
 
         } else if (opcion == 'n' || opcion == 'N') {
             ban = false;
+        } else if (opcion == 'a') {
+            cin >> nombre_estacion;
+            cout << "este: " << red_metro.getTiempoAntes(nombre_estacion);
+        } else if (opcion == 'd') {
+            cin >> nombre_estacion;
+            cout << "este: " << red_metro.getTiempoDespues(nombre_estacion);
         }
     }
 
     return 0;
 }
-
