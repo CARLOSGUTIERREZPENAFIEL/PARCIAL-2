@@ -843,7 +843,6 @@ int main() {
     bool ban = true;
     lineas red_metro;
     cout << "**Bienvenido a la creacion de una RED METRO.**" << endl << endl;
-    red_metro.agregarLinea();
     while (ban) {
         cout << endl << "*Ingrese la opcion deseada.*" << endl
              << "1. Agregar una estacion a una linea." << endl
